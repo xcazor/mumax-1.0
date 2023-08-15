@@ -1,0 +1,79 @@
+//Set grid configuration 
+Nx := 32 
+Ny := 32
+Nz := 16
+setgridsize(Nx, Ny, Nz)
+
+//Set Cell configuration 
+dx := 1e-9
+dy := 1e-9
+dz := 1e-9
+setcellsize(dx, dy, dz)
+
+//Magnetic parameters
+//Saturation magnetization
+Msat  = 800e3 
+//Exchange energy parameter
+Aex   = 13e-12 
+//Damping parameter
+alpha = 0.5
+//Gyromagnetic ratio
+GammaLL = 2*pi*175.87e9
+//DMI bulk parameter
+Dbulk = 0
+
+
+//Gnu-plots 
+//Save energy
+TableAdd(E_total)
+TableAdd(E_demag)
+TableAdd(E_exch)
+//Save magnetic field 
+TableAdd(B_eff)
+TableAdd(B_demag)
+TableAdd(B_exch)
+
+//Geometry
+diam := 20e-9 //diameter
+ratio := diam/2 
+hh := 1e-9 //height 
+dist := 5e-9 //gap between disks
+d_eff := dist/2 
+//Create the disk union geometry
+disk1 := cylinder(diam,hh).transl(0,0,d_eff) 
+disk2 := cylinder(diam,hh).transl(0,0,-d_eff)
+disks := disk1.add(disk2)
+//Set geometry
+setgeom(disks)
+//Save geometry
+saveas(geom,"initial_geo")
+
+//Set regions
+defregion(1, zrange(0,inf))
+defregion(2, zrange(-inf,0))
+
+//Magnetic configurations
+m.setRegion(1, vortex(1,0))
+m.setRegion(2, vortex(-1,0))
+
+//Save initial state
+saveas(m,"initial_state")
+//Relax the sistem
+relax()
+//Save relaxed state
+saveas(m,"relaxed_state")
+
+
+//Send current
+//Define area parameters
+ratio_pow := pow(ratio, 2)
+area := pi*ratio_pow
+//Definer current parameters 
+Jtot := -0.008           // total current in A
+jc   := Jtot / area       // current density in A/m2
+J = vector(0, 0, jc)
+
+// schedule output & run
+autosave(m, 25e-12)
+tableautosave(10e-12)
+run(0.5e-9)
